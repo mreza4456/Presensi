@@ -3,9 +3,9 @@ import { persist } from "zustand/middleware"
 
 interface User {
   id: string
-  email: string
+  email?: string
   name?: string
-  profile_photo_url?: string
+  profile_photo_url?: string 
 }
 
 interface AuthState {

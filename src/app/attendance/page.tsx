@@ -55,8 +55,9 @@ export default function AttendancePage() {
         getAllOrganization(),
         getAllWorkSchedules(),
         getAllMemberSchedule()
+        
       ])
-
+console.log("memberRes:", memberRes)
       if (!attendanceRes.success || !memberRes.success || !usersRes.success || !workScheduleRes || !memberScheduleRes) {
         throw new Error("Failed to fetch data")
       }
@@ -71,7 +72,7 @@ export default function AttendancePage() {
         const member = membersData.find((m) => m.id === a.organization_member_id)
         const user = usersData.find((u) => u.id === member?.user_id)
         const org = orgData.find((o) => o.id === member?.organization_id)
-
+       
         const memberSchedules = memberScheduleData.filter(
           (ms) => ms.organization_member_id === member?.id
         )
@@ -181,72 +182,72 @@ export default function AttendancePage() {
       },
     }
     ,
-   {
-  accessorKey: "status",
-  header: "Status",
-  cell: ({ row }) => {
-    const status = row.getValue("status") as string
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string
 
-    const statusMap: Record<string, { color: string; icon: React.ReactNode }> = {
-      present: { color: "bg-green-500 text-white", icon: <Check className="w-3 h-3 mr-1" /> },
-      absent: { color: "bg-gray-300 text-black", icon: <X className="w-3 h-3 mr-1" /> },
-      late: { color: "bg-red-500 text-white", icon: <Clock className="w-3 h-3 mr-1" /> },
-      excused: { color: "bg-blue-500 text-white", icon: <Info className="w-3 h-3 mr-1" /> },
-    }
+        const statusMap: Record<string, { color: string; icon: React.ReactNode }> = {
+          present: { color: "bg-green-500 text-white", icon: <Check className="w-3 h-3 mr-1" /> },
+          absent: { color: "bg-gray-300 text-black", icon: <X className="w-3 h-3 mr-1" /> },
+          late: { color: "bg-red-500 text-white", icon: <Clock className="w-3 h-3 mr-1" /> },
+          excused: { color: "bg-blue-500 text-white", icon: <Info className="w-3 h-3 mr-1" /> },
+        }
 
-    const { color, icon } = statusMap[status] || { color: "bg-gray-200", icon: null }
+        const { color, icon } = statusMap[status] || { color: "bg-gray-200", icon: null }
 
-    return (
-      <span
-        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${color}`}
-      >
-        {icon} {status || "-"}
-      </span>
-    )
-  },
-},
-{
-  accessorKey: "actual_check_out",
-  header: "Go Home",
-  cell: ({ row }) => {
-    const checkOut = row.getValue("actual_check_out") as string | null
-    if (!checkOut) {
-      return <span className="text-gray-400">-</span>
-    }
+        return (
+          <span
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${color}`}
+          >
+            {icon} {status || "-"}
+          </span>
+        )
+      },
+    },
+    {
+      accessorKey: "actual_check_out",
+      header: "Go Home",
+      cell: ({ row }) => {
+        const checkOut = row.getValue("actual_check_out") as string | null
+        if (!checkOut) {
+          return <span className="text-gray-400">-</span>
+        }
 
-    const dateObj = new Date(checkOut)
-    if (isNaN(dateObj.getTime())) return <span>{checkOut}</span>
+        const dateObj = new Date(checkOut)
+        if (isNaN(dateObj.getTime())) return <span>{checkOut}</span>
 
-    const formatted = new Intl.DateTimeFormat("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: row.original.timezone || "UTC",
-    }).format(dateObj)
+        const formatted = new Intl.DateTimeFormat("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: row.original.timezone || "UTC",
+        }).format(dateObj)
 
-    return (
-      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-500 text-white">
-        <Info className="w-3 h-3 mr-1" /> {formatted}
-      </span>
-    )
-  },
-},
+        return (
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-500 text-white">
+            <Info className="w-3 h-3 mr-1" /> {formatted}
+          </span>
+        )
+      },
+    },
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
         const attendance = row.original
         const handleUpdateStatus = async (newStatus: string) => {
-      try {
-        const res = await updateAttendanceStatus(attendance.id, newStatus)
-        if (res.success) {
-          toast.success(`Status updated to ${newStatus}`)
-        } else {
-          toast.error("Failed to update status")
+          try {
+            const res = await updateAttendanceStatus(attendance.id, newStatus)
+            if (res.success) {
+              toast.success(`Status updated to ${newStatus}`)
+            } else {
+              toast.error("Failed to update status")
+            }
+          } catch (error: any) {
+            toast.error(error.message || "Error updating status")
+          }
         }
-      } catch (error: any) {
-        toast.error(error.message || "Error updating status")
-      }
-    }
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -255,13 +256,13 @@ export default function AttendancePage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-      
-             <DropdownMenuLabel>Update Status</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => handleUpdateStatus("present")}>Present</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleUpdateStatus("absent")}>Absent</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleUpdateStatus("late")}>Late</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleUpdateStatus("excused")}>Excused</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleUpdateStatus("go home")}>Go Home</DropdownMenuItem>
+
+              <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleUpdateStatus("present")}>Present</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUpdateStatus("absent")}>Absent</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUpdateStatus("late")}>Late</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUpdateStatus("excused")}>Excused</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUpdateStatus("go home")}>Go Home</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )

@@ -11,7 +11,7 @@ type LoginResult =
   | {
       success: true
       user: { id: string; email: string }
-      profile: { id: string; display_name: string; avatar_url?: string } | null
+      profile: { id: string; display_name: string; profile_photo_url?: string } | null
       roles: { id: string | undefined; name: string | undefined }[]
       permissions: { code: string | undefined; name: string | undefined }[]
     }
@@ -92,7 +92,7 @@ export async function login(formData: FormData): Promise<LoginResult> {
   }
 
   const roles =
-    rolesData?.map((r) => ({
+    rolesData?.map((r : any) => ({
       id: r.role?.id,
       name: r.role?.name,
     })) ?? []
@@ -113,7 +113,7 @@ export async function login(formData: FormData): Promise<LoginResult> {
     }
 
     permissions =
-      permData?.map((p) => ({
+      permData?.map((p:any) => ({
         code: p.permission?.code,
         name: p.permission?.name,
       })) ?? []
@@ -126,7 +126,7 @@ export async function login(formData: FormData): Promise<LoginResult> {
       ? {
           id: profile.id,
           display_name: profile.display_name,
-          avatar_url: profile.avatar_url,
+          profile_photo_url: profile.profile_photo_url,
         }
       : null,
     roles,

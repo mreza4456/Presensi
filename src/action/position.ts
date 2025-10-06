@@ -40,19 +40,54 @@ export const getAllPositions = async () => {
   return { success: true, data: data as IPositions[] };
 };
 
-export async function createPositions(payload: Partial<IPositions>) {
-    const { data, error } = await supabase
-        .from("positions")
-        .insert(payload)
-        .select()
-        .single()
 
-    if (error) {
-        return { success: false, message: error.message, data: [] };
+export async function createPositions(payload: Partial<IPositions>) {
+  const supabaseServer = createServerComponentClient({ cookies });
+
+  // 1. Ambil user login
+  const { data: { user }, error: userError } = await supabaseServer.auth.getUser();
+  if (userError || !user) {
+    return { success: false, message: "User not logged in", data: [] };
+  }
+
+  let orgId = payload.organization_id;
+
+  // 2. Kalau payload tidak ada orgId → fallback ke membership
+  if (!orgId) {
+    const { data: member, error: memberError } = await supabaseServer
+      .from("organization_members")
+      .select("organization_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (memberError) {
+      return { success: false, message: memberError.message, data: [] };
     }
 
-    return { success: true, data: data as IPositions[] };
+    if (!member) {
+      return { success: false, message: "User not registered in any organization", data: [] };
+    }
+
+    orgId = member.organization_id;
+  }
+
+  // 3. Insert machine dengan orgId hasil logic di atas
+  const { data, error } = await supabaseServer
+    .from("positions")
+    .insert({
+      ...payload,
+      organization_id: orgId,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return { success: false, message: error.message, data: [] };
+  }
+
+  return { success: true, data: data as IPositions[] };
 }
+
 
 export async function updatePositions(id: string, payload: Partial<IPositions>) {
     const { data, error } = await supabase

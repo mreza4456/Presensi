@@ -1,21 +1,35 @@
 
 "use server";
 import {supabase} from "@/config/supabase-config";
-import { IDepartments } from "@/interface";
+import {  IMachine } from "@/interface";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { count } from "console";
 import { cookies } from "next/headers";
 
-export const getAllOfDepartments = async () => {
-  const { data, error } = await supabase.from("departments").select("*");
+export const getAllOfMachines = async () => {
+  const { data, error } = await supabase
+    .from("machines")
+    .select(`
+      id,
+      code,
+      type,
+    
+      is_active,
+      organization_id,
+      organizations!machines_organization_id_fkey (
+        id,
+        name
+      )
+    `);
 
   if (error) {
     return { success: false, message: error.message, data: [] };
   }
 
-  return { success: true, data: data as IDepartments[] };
+  return { success: true, data };
 };
-export const getAllDepartments = async () => {
+
+export const getAllMachines = async () => {
   const supabase = createServerComponentClient({ cookies });
 
   // 1. Ambil user dari cookies
@@ -38,7 +52,7 @@ export const getAllDepartments = async () => {
 
   // 3. Ambil semua member sesuai org
   const { data, error , count } = await supabase
-    .from("departments")
+    .from("machines")
     .select("*",{ count: "exact" })
     .eq("organization_id", member.organization_id)
     .order("created_at", { ascending: true });
@@ -47,9 +61,10 @@ export const getAllDepartments = async () => {
     return { success: false, message: error.message, data: [] , count: 0 };
   }
 
-  return { success: true, data: data as IDepartments[] ,count };
+  return { success: true, data: data as IMachine[] ,count };
 };
-export async function createDepartments(payload: Partial<IDepartments>) {
+
+export async function createMachines(payload: Partial<IMachine>) {
   const supabaseServer = createServerComponentClient({ cookies });
 
   // 1. Ambil user login
@@ -81,7 +96,7 @@ export async function createDepartments(payload: Partial<IDepartments>) {
 
   // 3. Insert machine dengan orgId hasil logic di atas
   const { data, error } = await supabaseServer
-    .from("departments")
+    .from("machines")
     .insert({
       ...payload,
       organization_id: orgId,
@@ -93,13 +108,14 @@ export async function createDepartments(payload: Partial<IDepartments>) {
     return { success: false, message: error.message, data: [] };
   }
 
-  return { success: true, data: data as IDepartments[] };
+  return { success: true, data: data as IMachine[] };
 }
 
 
-export async function updateDepartments(id: string, payload: Partial<IDepartments>) {
+
+export async function updateMachines(id: string, payload: Partial<IMachine>) {
     const { data, error } = await supabase
-        .from("departments")
+        .from("machines")
         .update({ ...payload, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select()
@@ -109,19 +125,19 @@ export async function updateDepartments(id: string, payload: Partial<IDepartment
         return { success: false, message: error.message, data: [] };
     }
 
-    return { success: true, data: data as IDepartments[] };
+    return { success: true, data: data as IMachine[] };
 }
 
 
-export const deleteDepartments = async ( departmentsId: string | number) => {
-     const id = String(departmentsId) // konversi ke string
+export const deleteMachines = async ( MachinesId: string | number) => {
+     const id = String(MachinesId) // konversi ke string
     const { data, error } = await supabase
-        .from("departments").delete().eq("id", id)
+        .from("machines").delete().eq("id", id)
         .select()
         .single();
 
     if (error) {
         return { success: false, message: error.message, data: null };
     }
-    return { success: true, message: "Deleted successfully", data: data as IDepartments };
+    return { success: true, message: "Deleted successfully", data: data as IMachine };
 };

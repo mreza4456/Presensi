@@ -29,14 +29,14 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import z from "zod"
 
-import { IPositions } from "@/interface"
+import { IMachine } from "@/interface"
 import {
-    createPositions,
-    deletePositions,
-    getAllOfPositions,
-    getAllPositions,
-    updatePositions,
-} from "@/action/position"
+    createDepartments,
+    deleteDepartments,
+    getAllDepartments,
+    getAllOfDepartments,
+    updateDepartments,
+} from "@/action/departement"
 import LoadingSkeleton from "@/components/loading-skeleton"
 import {
     Select,
@@ -49,25 +49,25 @@ import { getAllOrganization } from "@/action/organization"
 import { ContentLayout } from "@/components/admin-panel/content-layout"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Can } from "@/components/can"
+import { createMachines, deleteMachines, getAllMachines, getAllOfMachines, updateMachines } from "@/action/machine"
 
-const positionSchema = z.object({
+const machineSchema = z.object({
     organization_id: z.string().min(1, "Organization is required"),
     code: z.string().min(2, "min 2 characters"),
-    title: z.string().min(2, "min 2 characters"),
-    description: z.string().optional(),
-    level: z.string().optional(),
+    type: z.string().min(2, "min 2 characters"),
+
     is_active: z.boolean(),
 })
 
-type PositionsForm = z.infer<typeof positionSchema>
+type MachineForm = z.infer<typeof machineSchema>
 
-export default function WorkSchedulesPage() {
+export default function DepartmentsPage() {
     const params = useParams()
     const scheduleId = Number(params.id)
 
     const [open, setOpen] = React.useState(false)
-    const [editingDetail, setEditingDetail] = React.useState<IPositions | null>(null)
-    const [schedules, setSchedules] = React.useState<IPositions[]>([])
+    const [editingDetail, setEditingDetail] = React.useState<IMachine | null>(null)
+    const [schedules, setSchedules] = React.useState<IMachine[]>([])
     const [organizations, setOrganizations] = React.useState<{ id: string; name: string }[]>([])
     const [loading, setLoading] = React.useState<boolean>(true)
     const [organizationId, setOrganizationId] = React.useState<string>("")
@@ -81,10 +81,10 @@ export default function WorkSchedulesPage() {
             let response: any
             if (organizationId) {
                 // user punya orgId → hanya fetch miliknya
-                response = await getAllPositions()
+                response = await getAllMachines()
             } else {
                 // user tidak punya orgId → fetch semua department
-                response = await getAllOfPositions()
+                response = await getAllOfMachines()
             }
 
             if (!response.success) throw new Error(response.message)
@@ -131,14 +131,13 @@ export default function WorkSchedulesPage() {
         fetchOrganizationId()
     }, [scheduleId])
 
-    const form = useForm<PositionsForm>({
-        resolver: zodResolver(positionSchema) as any,
+    const form = useForm<MachineForm>({
+        resolver: zodResolver(machineSchema) as any,
         defaultValues: {
             organization_id: "",
             code: "",
-            title: "",
-            description: "",
-            level: "",
+            type: "",
+
             is_active: true,
         },
     })
@@ -148,22 +147,25 @@ export default function WorkSchedulesPage() {
         if (organizationId) {
             form.reset({
                 ...form.getValues(),
-                organization_id: organizationId,
+                organization_id: organizationId || "",
             })
         }
-    }, [organizationId]) // <--- HANYA organizationId
+    }, [organizationId])
 
-
-
-    const handleSubmit = async (values: PositionsForm) => {
-        console.log("🚀 Submit values:", values)
+    const handleSubmit = async (values: MachineForm) => {
         try {
+            if (!values.organization_id) {
+                toast.error("Please select organization")
+                return
+            }
+
             let res
             if (editingDetail) {
-                res = await updatePositions(editingDetail.id, values as any)
+                res = await updateMachines(editingDetail.id, values as any)
             } else {
-                res = await createPositions(values as any)
+                res = await createMachines(values as any)
             }
+
             if (!res.success) throw new Error(res.message)
             toast.success(editingDetail ? "Updated successfully" : "Created successfully")
             setOpen(false)
@@ -174,12 +176,13 @@ export default function WorkSchedulesPage() {
         }
     }
 
+
     const handleDelete = async (scheduleId: string | number) => {
         try {
             setLoading(true)
-            const response = await deletePositions(scheduleId)
+            const response = await deleteMachines(scheduleId)
             if (!response.success) throw new Error(response.message)
-            toast.success("Schedule deleted successfully")
+            toast.success("Department deleted successfully")
             fetchSchedules()
         } catch (error: any) {
             toast.error(error.message)
@@ -189,11 +192,15 @@ export default function WorkSchedulesPage() {
     }
 
     // --- definisi kolom ---
-    const columns: ColumnDef<IPositions>[] = [
+    const columns: ColumnDef<IMachine>[] = [
         { accessorKey: "code", header: "Code" },
-        { accessorKey: "title", header: "Title" },
+        { accessorKey: "type", header: "Type" },
         { accessorKey: "description", header: "Description" },
-        { accessorKey: "level", header: "Level" },
+        {
+            accessorKey: "organizations.name",
+            header: "Organization",
+            cell: ({ row }) => row.original.organization?.name || "-"
+        },
         {
             id: "actions",
             header: "Actions",
@@ -228,24 +235,30 @@ export default function WorkSchedulesPage() {
     ]
 
     return (
-        <ContentLayout title="Position">
+        <ContentLayout title="Machines">
             <div className="w-full max-w-6xl mx-auto">
                 <div className="items-center my-7">
                     <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild className="float-end  ml-5">
+                        <DialogTrigger asChild className="float-end ml-5">
                             <Button
                                 onClick={() => {
                                     setEditingDetail(null)
-                                    form.reset()
+                                    form.reset({
+                                        organization_id: organizationId || "", // kalau user biasa isi otomatis
+                                        code: "",
+                                        type: "",
+                                        is_active: true,
+                                    })
                                 }}
                             >
                                 Add <Plus className="ml-2" />
                             </Button>
+
                         </DialogTrigger>
                         <DialogContent aria-describedby={undefined}>
                             <DialogHeader>
                                 <DialogTitle>
-                                    {editingDetail ? "Edit Detail" : "Add Detail"}
+                                    {editingDetail ? "Edit Machine" : "Add Machine"}
                                 </DialogTitle>
                             </DialogHeader>
                             <Form {...form}>
@@ -267,7 +280,7 @@ export default function WorkSchedulesPage() {
                                             )}
                                         />
                                     ) : (
-                                        <Can permission="view_position">
+                                        <Can permission="view_machine">
                                             <FormField
                                                 control={form.control}
                                                 name="organization_id"
@@ -313,10 +326,10 @@ export default function WorkSchedulesPage() {
                                     />
                                     <FormField
                                         control={form.control}
-                                        name="title"
+                                        name="type"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Title</FormLabel>
+                                                <FormLabel>Type</FormLabel>
                                                 <FormControl>
                                                     <Input type="text" {...field} />
                                                 </FormControl>
@@ -324,30 +337,7 @@ export default function WorkSchedulesPage() {
                                             </FormItem>
                                         )}
                                     />
-                                    <FormField
-                                        control={form.control}
-                                        name="description"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Description</FormLabel>
-                                                <FormControl>
-                                                    <Input type="text" {...field ?? ""} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="level"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Level</FormLabel>
-                                                <FormControl>
-                                                    <Input type="number" {...field ?? ""} />
-                                                </FormControl>
-                                            </FormItem>
-                                        )}
-                                    />
+
                                     <FormField
                                         control={form.control}
                                         name="is_active"
@@ -374,7 +364,7 @@ export default function WorkSchedulesPage() {
                 {loading ? (
                     <LoadingSkeleton />
                 ) : (
-                    <DataTable columns={columns} data={schedules} filterColumn="title" />
+                    <DataTable columns={columns} data={schedules} filterColumn="code" />
                 )}
             </div>
         </ContentLayout>

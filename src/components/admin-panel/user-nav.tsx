@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { LayoutGrid, LogOut, User } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { LayoutGrid, User } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
   TooltipProvider
-} from "@/components/ui/tooltip";
+} from "@/components/ui/tooltip"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,15 +19,24 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { useAuthStore } from "@/store/user-store";
-import LogoutButton from "../logout";
+} from "@/components/ui/dropdown-menu"
+import { useAuthStore } from "@/store/user-store"
+import LogoutButton from "../logout"
+import LanguageSwitcher from "../language-switcher"
 
 export function UserNav() {
-    const user = useAuthStore((state) => state.user)
+  const user = useAuthStore((state) => state.user)
+  const [hydrated, setHydrated] = useState(false)
 
-  if (!user) return null
+  // ✅ Pastikan Zustand store sudah rehydrate
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
+  if (!hydrated) return null // hindari render sebelum rehydrate
+  if (!user) return null // tidak render kalau belum login
+
+  // Fungsi untuk ambil inisial nama
   const getInitials = (name: string) =>
     name
       .split(" ")
@@ -46,9 +55,20 @@ export function UserNav() {
                 className="relative h-8 w-8 rounded-full"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.profile_photo_url || ""}
-                  alt={user.name}  />
-                  <AvatarFallback className="bg-transparent"> {getInitials(user.name)}</AvatarFallback>
+                  {user.profile_photo_url ? (
+                    <AvatarImage
+                      src={user.profile_photo_url}
+                      alt={user.name || "User Avatar"}
+                      onError={(e) => {
+                        // Jika gambar gagal dimuat, fallback ke default avatar
+                        (e.currentTarget as HTMLImageElement).src = "/default-avatar.png"
+                      }}
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-transparent">
+                      {getInitials(user.name || "")}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -66,27 +86,29 @@ export function UserNav() {
             </p>
           </div>
         </DropdownMenuLabel>
+
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem className="hover:cursor-pointer" asChild>
+          <DropdownMenuItem asChild className="hover:cursor-pointer">
             <Link href="/dashboard" className="flex items-center">
               <LayoutGrid className="w-4 h-4 mr-3 text-muted-foreground" />
               Dashboard
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="hover:cursor-pointer" asChild>
+
+          <DropdownMenuItem asChild className="hover:cursor-pointer">
             <Link href="/account" className="flex items-center">
               <User className="w-4 h-4 mr-3 text-muted-foreground" />
               Account
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
+
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="hover:cursor-pointer" onClick={() => {}}>
-       
-          <LogoutButton/>
+        <DropdownMenuItem className="hover:cursor-pointer">
+          <LogoutButton />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

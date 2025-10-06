@@ -139,6 +139,7 @@ export default function Home() {
   if (orgId === null && orgStats.length > 0) {
     return (
       <ContentLayout title="Dashboard">
+        
         <div className="mt-10">
           <div className="w-full max-w-6xl mx-auto">
             <div className="flex flex-1 flex-col gap-4 py-6 pt-0">

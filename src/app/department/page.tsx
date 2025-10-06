@@ -175,7 +175,7 @@ export default function DepartmentsPage() {
             setLoading(true)
             const response = await deleteDepartments(scheduleId)
             if (!response.success) throw new Error(response.message)
-            toast.success("Department deleted successfully")
+            toast.success("Group deleted successfully")
             fetchSchedules()
         } catch (error: any) {
             toast.error(error.message)
@@ -223,7 +223,7 @@ export default function DepartmentsPage() {
     ]
 
     return (
-        <ContentLayout title="Departments">
+        <ContentLayout title="Group">
             <div className="w-full max-w-6xl mx-auto">
                 <div className="items-center my-7">
                     <Dialog open={open} onOpenChange={setOpen}>
@@ -240,7 +240,7 @@ export default function DepartmentsPage() {
                         <DialogContent aria-describedby={undefined}>
                             <DialogHeader>
                                 <DialogTitle>
-                                    {editingDetail ? "Edit Department" : "Add Department"}
+                                    {editingDetail ? "Edit Group" : "Add Group"}
                                 </DialogTitle>
                             </DialogHeader>
                             <Form {...form}>
@@ -262,7 +262,7 @@ export default function DepartmentsPage() {
                                             )}
                                         />
                                     ) : (
-                                        <Can permission="view_departments">
+                                        <Can permission="view_department">
                                             <FormField
                                                 control={form.control}
                                                 name="organization_id"

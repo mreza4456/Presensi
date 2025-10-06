@@ -36,7 +36,7 @@ export function LoginForm({
         id: result.user.id,
         email: result.user.email!,
         name: result.profile?.display_name || result.user.email!,
-        profile_photo_url: result.profile?.avatar_url,
+        profile_photo_url: result.profile?.profile_photo_url,
       })
 
       // Simpan permissions ke Zustand

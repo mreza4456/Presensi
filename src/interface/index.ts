@@ -11,8 +11,8 @@ export interface IUser {
    gender: "male" | "female" | null;
     nationality?: string;
     national_id?: string;
-    profile_photo_url?: string;
-    emergency_contact?: string;
+    profile_photo_url?: string | null;
+     emergency_contact?: IEmergencyContact | null;
     is_active: boolean;
     created_at: string;
     updated_at?: string;
@@ -229,4 +229,20 @@ export interface IRfidCard{
     organization_member:IOrganization_member;
 
 
+}
+
+export interface IMachine{
+    id:string;
+    code:string;
+    type:string;
+    is_active:boolean;
+    organization_id:string;
+
+    organization:IOrganization;
+}
+export interface IEmergencyContact {
+    name?: string;
+    relationship?: string;
+    phone?: string;
+    email?: string;
 }

@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   User2,
   Armchair,
-  Building
+  Building,
+  Settings2
 } from "lucide-react";
 
 type Submenu = {
@@ -70,7 +71,7 @@ export function getMenuList(pathname: string): Group[] {
         },
         {
           href: "/department",
-          label: "Department",
+          label: "Group",
           icon: Building,
           permission: "view_department",
         },
@@ -114,6 +115,12 @@ export function getMenuList(pathname: string): Group[] {
           href: "/permission",
           label: "Permission",
           icon: List,
+          permission: "view_permission",
+        },
+        {
+          href: "/machine",
+          label: "Machine",
+          icon: Settings2,
           permission: "view_permission",
         }
       ]

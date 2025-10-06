@@ -24,22 +24,25 @@ export const getAllOrganization_member = async () => {
   }
 
   // 2. Cari organization_id user
-  const { data: member } = await supabase
+  const { data: member, error: memberError } = await supabase
     .from("organization_members")
     .select("organization_id")
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!member) {
-    return { success: true, message: "User not registered in any organization", data: [] };
+  if (memberError) {
+    return { success: false, message: memberError.message, data: [] };
   }
 
-  // 3. Ambil semua member sesuai org
-  const { data, error } = await supabase
-    .from("organization_members")
-    .select("*")
-    .eq("organization_id", member.organization_id)
-    .order("created_at", { ascending: true });
+  let query = supabase.from("organization_members").select("*").order("created_at", { ascending: true });
+
+  // 3. Kalau ada org_id → filter
+  if (member?.organization_id) {
+    query = query.eq("organization_id", member.organization_id);
+  }
+  // kalau tidak ada org_id → admin, biarkan query tanpa filter
+
+  const { data, error } = await query;
 
   if (error) {
     return { success: false, message: error.message, data: [] };
@@ -47,6 +50,7 @@ export const getAllOrganization_member = async () => {
 
   return { success: true, data: data as IOrganization_member[] };
 };
+
 // ✏️ Update Organization
 export const updateOrganizationMember = async (id: string, organization: Partial<IOrganization_member>) => {
 
